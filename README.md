@@ -40,14 +40,15 @@ chmod +x gw2-mcp
 
 ### Configuring with OpenCode
 
-Add the server to your OpenCode configuration (e.g. `~/.config/opencode/config.json` or your project-level `.opencode/config.json`):
+Add the server to your OpenCode configuration. For global config use `~/.config/opencode/opencode.json`, for per-project config use `.opencode/opencode.json`:
 
 ```json
 {
-  "mcpServers": {
+  "mcp": {
     "gw2": {
-      "command": "/path/to/gw2-mcp",
-      "env": {
+      "type": "local",
+      "command": ["/absolute/path/to/gw2-mcp"],
+      "environment": {
         "GW2_API_KEY": "YOUR_API_KEY_HERE"
       }
     }
@@ -55,9 +56,12 @@ Add the server to your OpenCode configuration (e.g. `~/.config/opencode/config.j
 }
 ```
 
-If you prefer not to set the API key globally, you can omit the `env` block and pass `apiKey` as a parameter to any authenticated tool call instead.
+Key points:
+- **`type`** must be `"local"` for stdio-based servers
+- **`command`** must be an **array** of strings — first element is the binary path, subsequent elements are arguments
+- **`environment`** is optional — omit it and pass `apiKey` per tool call instead
 
-After updating the config, restart OpenCode. The GW2 tools will be available automatically.
+Restart OpenCode after updating the config. Verify with `/mcps` — the `gw2` server should appear.
 
 > **Tip:** To generate a GW2 API key, go to [https://account.arena.net/applications](https://account.arena.net/applications) and create a key with the permissions you need.
 

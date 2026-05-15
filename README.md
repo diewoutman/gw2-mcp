@@ -1,14 +1,22 @@
 # GW2 MCP Server
 
-A [Model Context Protocol](https://modelcontextprotocol.io/) server for the [Guild Wars 2 API](https://api.guildwars2.com/), built with .NET 8.
+A [Model Context Protocol](https://modelcontextprotocol.io/) server for the [Guild Wars 2 API](https://api.guildwars2.com/) and [GW2 Wiki](https://wiki.guildwars2.com/), built with .NET 8.
 
-Exposes 28 tools covering all major GW2 API endpoints — account info, characters, trading post, items, recipes, WvW, guilds, maps, and more.
+18 parameterized tools covering the full GW2 API (~150 endpoints) plus wiki search, with built-in caching and rate limiting.
+
+## Features
+
+- **18 MCP tools** covering ~150 API endpoints via parameterized `endpoint` selection
+- **Wiki search** — query the GW2 wiki directly
+- **Tiered caching** — static data cached 24h, dynamic data 5min, wiki 24h
+- **Rate limiting** — semaphore-based concurrency control (10 concurrent requests)
+- **Cross-platform** — self-contained single-file binaries for Linux, macOS, Windows
 
 ## Installation
 
 ### Prerequisites
 
-- [.NET 8.0 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
+- [.NET 8.0 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) (for building from source)
 
 ### Build from source
 
@@ -34,7 +42,7 @@ Grab the latest release archive for your platform from the [Releases](https://gi
 Extract and make executable (Linux/macOS):
 
 ```bash
-tar -xzf gw2-mcp-0.1.0-linux-x64.tar.gz
+tar -xzf gw2-mcp-0.2.0-linux-x64.tar.gz
 chmod +x gw2-mcp
 ```
 
@@ -67,84 +75,101 @@ Restart OpenCode after updating the config. Verify with `/mcps` — the `gw2` se
 
 ## Tools
 
-### Account (requires API key)
+### `Gw2Account`
+Access account data. `endpoint` selects what to retrieve:
+- `account`, `bank`, `materials`, `achievements`, `dyes`, `minis`, `skins`, `wallet`, `titles`, `raids`, `masteries`, `recipes`, `finishers`, `outfits`, `luck`, `wvw`, `inventory`, `buildstorage`, `dailycrafting`, `dungeons`, `gliders`, `emotes`, `mailcarriers`, `mapchests`, `mastery/points`, `mounts/skins`, `mounts/types`, `novelties`, `pvp/heroes`, `legendaryarmory`, `worldbosses`, `homestead/decorations`, `homestead/glyphs`, `wizardsvault/daily`, `wizardsvault/weekly`, `wizardsvault/special`, `wizardsvault/listings`, `home/cats`, `home/nodes`, `skiffs`, `jadebots`
+- All require `apiKey` (or `GW2_API_KEY` env var)
 
-| Tool | Description |
-|------|-------------|
-| `GetAccount` | Get account info — ID, name, world, guilds, creation date |
-| `GetBank` | Get the contents of the account's bank |
-| `GetMaterials` | Get the account's material storage |
-| `GetTokenInfo` | Get information about the supplied API key (name, permissions) |
+### `Gw2TokenInfo`
+Get API key information — name, permissions, ID. Requires `apiKey`.
 
-### Characters (requires API key)
+### `Gw2Characters`
+List all character names. Requires `apiKey`.
 
-| Tool | Description |
-|------|-------------|
-| `GetCharacters` | List all character names on the account |
-| `GetCharacter` | Get details for a specific character — race, profession, level, equipment, bags |
+### `Gw2Character`
+Get character details. `endpoint` selects: `full` (default), `backstory`, `buildtabs`, `buildtabs/active`, `core`, `crafting`, `equipment`, `equipmenttabs`, `equipmenttabs/active`, `heropoints`, `inventory`, `quests`, `recipes`, `skills`, `specializations`, `training`. Requires `apiKey`.
 
-### Commerce / Trading Post
+### `Gw2Commerce`
+Trading post data. `endpoint` selects: `prices`, `listings`, `exchange/gems`, `exchange/coins`, `transactions`, `delivery`. Use `param` for gem/coin quantities or transaction type (e.g. `current/buys`).
 
-| Tool | Description |
-|------|-------------|
-| `GetListings` | Get buy and sell listings for items |
-| `GetPrices` | Get current buy/sell prices for items |
-| `GetExchangeCoins` | Gem → coins exchange rate |
-| `GetExchangeGems` | Coins → gem exchange rate |
-| `GetTransactions` | Get current or historical buy/sell transactions (requires API key) |
+### `Gw2Item`
+Item data. `endpoint` selects: `items`, `skins`, `materials`, `itemstats`. Supports `ids`, `page`, `lang`.
 
-### Items
+### `Gw2Recipe`
+Recipe data. `endpoint`: `recipes` for details, `search` to find by `input` or `output` item ID.
 
-| Tool | Description |
-|------|-------------|
-| `GetItems` | Get item details — name, icon, type, rarity, level, flags |
-| `GetMaterials` | Get material category names and item IDs |
-| `GetRecipes` | Get recipe details — type, output, ingredients, disciplines |
-| `SearchRecipes` | Search recipes by input ingredient or output item ID |
-| `GetSkins` | Get skin details — name, type, flags, icon |
+### `Gw2GuildSearch`
+Search guilds by name.
 
-### Maps
+### `Gw2Guild`
+Guild data. `endpoint` selects: `details`, `log`, `members`, `ranks`, `stash`, `storage`, `treasury`, `teams`, `upgrades`. Most require `apiKey` with guild permissions.
 
-| Tool | Description |
-|------|-------------|
-| `GetContinents` | Get continent info — name, dimensions, floors |
-| `GetMaps` | Get map details — name, level range, region, continent |
+### `Gw2GuildData`
+Guild metadata. `endpoint`: `permissions` or `upgrades`.
 
-### World vs World
+### `Gw2Wvw`
+WvW data. `endpoint`: `matches`, `abilities`, `objectives`, `ranks`, `upgrades`, `rewardtracks`, `timers`. Supports `ids`, `lang`.
 
-| Tool | Description |
-|------|-------------|
-| `GetMatches` | Get all currently running WvW matches |
-| `GetMatchDetails` | Get scores and map details for a specific WvW match |
-| `GetObjectiveNames` | Get localized WvW objective names |
+### `Gw2WvwMatchDetail`
+Match details. `detail` selects: `overview`, `scores`, `stats`. Requires `worldId`.
 
-### Guilds
+### `Gw2WvwObjectiveNames`
+Localized WvW objective names (v1 endpoint). Supports `lang`.
 
-| Tool | Description |
-|------|-------------|
-| `GetGuildById` | Look up a guild by its ID |
-| `GetGuildByName` | Look up a guild by its name |
+### `Gw2Pvp`
+PvP game data. `endpoint`: `amulets`, `heroes`, `ranks`, `rewardtracks`, `runes`, `sigils`, `seasons`. Supports `ids`, `lang`.
 
-### Miscellaneous
+### `Gw2PvpAccount`
+Authenticated PvP data. `endpoint`: `games`, `standings`, `stats`. Requires `apiKey`.
 
-| Tool | Description |
-|------|-------------|
-| `GetBuild` | Get the current GW2 build ID |
-| `GetColors` | Get dye color info — names, RGB components |
-| `GetFiles` | Get in-game asset file URLs (icons, maps, etc.) |
-| `GetQuaggans` | Get quaggan image URLs |
-| `GetWorlds` | Get world/server info — name, population |
+### `Gw2Achievement`
+Achievement data. `endpoint`: `achievements`, `categories`, `daily`, `daily/tomorrow`, `groups`. Supports `ids`, `page`, `lang`.
+
+### `Gw2Cosmetic`
+Cosmetic items. `endpoint`: `minis`, `outfits`, `gliders`, `finishers`, `novelties`, `emotes`, `mailcarriers`, `jadebots`, `skiffs`, `mounts/skins`, `mounts/types`. Supports `ids`, `page`, `lang`.
+
+### `Gw2GameData`
+General game data. `endpoint`: `currencies`, `professions`, `races`, `specializations`, `skills`, `traits`, `masteries`, `legends`, `pets`, `dungeons`, `raids`, `stories`, `seasons`, `titles`, `itemstats`, `dailycrafting`, `mapchests`, `worldbosses`, `quests`, `backstory/answers`, `backstory/questions`. Supports `ids`, `page`, `lang`.
+
+### `Gw2Map`
+Map data. `endpoint`: `continents`, `maps`. Supports `ids`, `page`, `lang`.
+
+### `Gw2Homestead`
+Homestead and home instance data. `endpoint`: `decorations`, `categories`, `glyphs`, `cats`, `nodes`. Supports `ids`, `page`, `lang`.
+
+### `Gw2WizardsVault`
+Wizard's Vault data. `endpoint`: `listings`, `objectives`. Supports `ids`.
+
+### `Gw2WikiSearch`
+Search the GW2 wiki. Pass `query` and optional `limit` (default 5). Returns titles, snippets, page URLs, and 500-character extracts.
+
+### `Gw2Build`
+Current GW2 build ID. No parameters.
+
+### `Gw2Misc`
+Miscellaneous data. `endpoint`: `colors`, `files`, `quaggans`, `worlds`, `subtoken`. Supports `ids`, `page`, `lang`. `subtoken` requires `apiKey`.
 
 ## Common Parameters
 
-Most tools share these optional parameters:
-
 | Parameter | Description |
 |-----------|-------------|
+| `endpoint` | Selects which API resource to query (each tool lists valid values) |
 | `apiKey` | GW2 API key. Falls back to `GW2_API_KEY` env var if not provided |
 | `ids` | Comma-separated IDs to filter results (e.g. `"19683,19709"`) |
 | `page` | Page number for pagination (0-based) |
 | `lang` | Language code: `en`, `de`, `es`, `fr`, `zh`, `ko` |
+| `name` | Character name (for character tools) |
+| `guildId` | Guild ID (for guild tools) |
+| `query` | Search query (for wiki search) |
+| `limit` | Max results to return (for wiki search, default 5) |
+
+## Caching
+
+| Data type | TTL | Examples |
+|-----------|-----|---------|
+| Static (items, currencies, professions...) | 24 hours | `/v2/items`, `/v2/professions`, `/v2/worlds` |
+| Dynamic (account, wallet, transactions...) | 5 minutes | `/v2/account`, `/v2/commerce/prices` |
+| Wiki content | 24 hours | Search results, page extracts |
 
 ## Releasing
 

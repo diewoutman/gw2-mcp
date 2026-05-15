@@ -1,6 +1,6 @@
 # GW2 MCP Server
 
-A [Model Context Protocol](https://modelcontextprotocol.io/) server for the [Guild Wars 2 API](https://api.guildwars2.com/) and [GW2 Wiki](https://wiki.guildwars2.com/), built with .NET 8.
+A [Model Context Protocol](https://modelcontextprotocol.io/) server for the [Guild Wars 2 API](https://api.guildwars2.com/) and [GW2 Wiki](https://wiki.guildwars2.com/), built with .NET 10.
 
 18 parameterized tools covering the full GW2 API (~150 endpoints) plus wiki search, with built-in caching and rate limiting.
 
@@ -16,7 +16,7 @@ A [Model Context Protocol](https://modelcontextprotocol.io/) server for the [Gui
 
 ### Prerequisites
 
-- [.NET 8.0 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) (for building from source)
+- [.NET 10.0 SDK](https://dotnet.microsoft.com/download/dotnet/10.0) (for building from source)
 
 ### Build from source
 
